@@ -1,222 +1,443 @@
-// ngrok-v3-stable-windows-amd64.zip 파일을 c://windows밑에 압축을 풀면 언디듣 사용가능함
-// ngrok config add-authtoken 2dwEBSPRtwUXqkPm6kRxBnASGpo_5btKJiWunak1efJKCi7x8
-// ngrok http http://localhost:8080        // 외부 터미날에 연결
-// Forwarding   https://f4f5-175-214-28-198.ngrok-free.app -> http://localhost:8080
-//                    위항목 클릭 (url 은 그때그때 바뀜)
-//  ngrok http http://localhost:8000 동작 실행
-
-/* 
-https://playcode.tistory.com/64
-netstat -a -o
-
-taskkill /f /pid 8080
- */
-//////////////////////////////////////////////////////////////////////////////////
-//  http로 전달하도록 ngrok를 지정    ~~ https://stackoverflow.com/questions/72744384/how-do-you-force-ngrok-to-forward-to-http-and-not-https
-// ngrok http --scheme=http 4545 --host-header=localhost:4545   //
-// ngrok http --scheme=http 8000 --host-header=localhost:8000   //
-// ngrok http --scheme=http 8000 --host-header=localhost:8000  upgrade-insecure-requests' //
-//////////////////////////////////////////////////////////////////////////////////////
-// ngrok http 8080 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
-// ngrok http --scheme=http 8000 --host-header=http://localhost:8000
-
-
-// nodemon app           // NodeJS 실행     npm install -g nodemon
-// nodemon 1nodejs.js           // NodeJS 실행     npm install -g nodemon
-
-// npm init -y
-// npm install express
-// npm install -g nodemon
-//  npm install mongodb@5
-//  npm install ejs
-
-//  powershall에서   npm install -g ngrok ( powershall에서 )
-// 터미날에서 ngrok config add-authtoken 2dwEBSPRtwUXqkPm6kRxBnASGpo_5btKJiWunak1efJKCi7x8
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-// public ->  env.js -> NGROK_URL를 새로 작성 후 test
-//////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////
-// public ->  env.js -> NGROK_URL를 새로 작성 후 test
-//////////////////////////////////////////////////////////////////////
-
-// const dotenv = require('dotenv');
-// dotenv.config();
-
-const express = require('express');
-
-
-
-const path = require('path');
-const app = express() ;
-const fs = require('fs').promises;
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
-const cors = require('cors') ;
-const port = 3000 ;
-
-
-
-
-
-
-
-// ejs : 7.웹페이지에 DB데이터 꽂기 (EJS, 서버사이드 렌더링) 
-//  views/list.ejs 
-app.set('view engine', 'ejs')  ;  //  npm install ejs
-//app.set('PORT', process.env.PORT || 3000);
-
-app.use(morgan('dev'));  // 로그인 정보 알려줌 : dev(개발시) combined(배포시), common, short, tiny 
-app.use(express.json())      ;     // npm install express  // req.body로 쉽게 꺼내쓸 수 있게 도와주는 코드
-app.use(express.urlencoded({extended:true})) ;  // req.body로 쉽게 꺼내쓸 수 있게 도와주는 코드
-app.use(express.static(__dirname + '/public'))  ;// main.css 여러파일(staticfile) 찹조
-// app.use('/',express.static(__dirname + '/public'))  ; // 경로별 공유 지정
-// app.use('요청경로',express.static('실제경로'))  ;
-
-app.use(cors()) ;
-
-
-app.listen(port, () => {
-// app.listen(PORT, () => {;
-  console.log(`http://localhost:${port} 에서 서버 실행중`)
-  })
-
-process.on('uncaughtException', (err) => {
-console.error('예기치 못한 에러  ', err);
-});
-
-////////////////////////////////////////////////////////////////////////
-
-
-let user_data =  {                    
-                    "apikey": "",     // TEST-API-KEY-URL (x) -> TEST-API-KEY-TALK( 0 )   
-                    "member": "",
-                    "merchant": "",
-                    "bill": {
-                        "bill_id":""    ,   // 꼭 20 자리 !!!
-                        "hash": ""    , 
-                        "product_nm":""    , 
-                        "message":""    , 
-                        "member_nm":""    , 
-                        "phone":""    , 
-                        "price":""    , 
-                        "expire_dt":""    , 
-                        "callbackURL": ""     
-                     }        
-                };
-// 
-///////////////////////////////////////////////////////////////
-
-app.get('/', (req, res) => {     
-  // req.session.name = 'dal' ;
-  res.render('paymint_user.ejs')  
-}) 
-
-
-///////////////////// paymint ////////////////////////////////////////
-
-
-app.get('/paymint_user', (req, res) =>{  
-  // console.log(` ------------- 1. /paymint_user get -------------`)
-  // console.log(`req.params : ${req.params}`)
-  console.log(`\n------ http get /-----   ${new Date().toLocaleString()}`);
-  res.render('paymint_user.ejs')  
-})  
-
-app.post('/paymint_user', (req, res) =>{  
-  // console.log(` ------------- 1. /paymint_user get -------------`)
-  console.log(`\n------ http get /-----   ${new Date().toLocaleString()}`);
-  console.log(`\n\n paymint_user post : `, req.body)
-
-  
-})  
-
-
-app.get('/paymint_localhost', (req, res) =>{    
-  // console.log(` ------------- 3. /paymint_localhost get   -------------`)  
-  console.log(`\n------ http get /-----   ${new Date().toLocaleString()}`);
-  try {
-    // console.log(`\n user_data : `, JSON.stringify(user_data) )
-    console.log(`\n user_data : `, user_data )    
-    // res.sendFile(__dirname + '/paymint_1.html')
-    res.render('paymint_localhost.ejs',{ user_data : user_data})  
-    //  TODO :  user_data : _id걸든, mogodb에 저장하든
-  } catch(error) {
-    console.log('paymint_localhost get error',error)
-  } 
-})  
-
-
-app.post('/paymint_localhost', async (req, res) =>{
-    // console.log(` ------------- 2. /paymint_1 post ---------------`)
-    console.log(`\n------ http get /-----   ${new Date().toLocaleString()}`);
-  
-  var today = new Date();       
-  var year = ('0' + (today.getFullYear())).slice(-2);
-  var month = ('0' + (today.getMonth() + 1)).slice(-2);
-  var day = ('0' + today.getDate()).slice(-2);
-  var hour = ('0' + today.getHours()).slice(-2);
-  var minutes = ('0' + today.getMinutes()).slice(-2);
-  var seconds = ('0' + today.getSeconds()).slice(-2);  
-  var Milliseconds =('000' + today.getMilliseconds()).slice(-3);  
-  
-  var _bill_id = "T1_"+year + month + day+"_"+hour+minutes+seconds+"_"+Milliseconds;
-  var _phone = req.body.bill.phone;
-  var _price = req.body.bill.price;
-  var _member_nm = req.body.bill.member_nm ;
-  var _product_nm = req.body.bill.product_nm ;
-  var _message = req.body.bill.message 
-  var _callbackURL = req.body.bill.callbackURL
-  
-  var dateString = year + '-' + month  + '-' + day+' '+hour+':'+minutes+':'+seconds;
-  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta http-equiv="expires" content="-1">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
  
-  /////////////////   sha256   //////////////////////////////
-  const crypto = require('crypto');
-  // const pw = '20240319123456789004,01032677435,20001';
-  const pw = _bill_id+","+_phone+","+_price ;
-  let _hash = crypto.createHash('sha256').update(pw).digest('hex');
- 
-  console.log(`\npw : ${pw} \nsha256_hex : ${_hash}\n`);
-   
-  //////////////////////////////////////////////////////////
-  user_data =         
+    <!-- Bootstrap css 는 mian.css 위에-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+    <title>paymint_user_ngrok</title>
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script> 
+
+    
+    <style>
+        html, body {
+            font-family: 'NanumSquare',sans-serif;
+            font-weight: 400;
+            font-size: 12px;
+            color: #000;
+            height: 100%;
+            margin:0;
+            padding:0;
+            scroll-behavior: smooth;
+            overscroll-behavior: contain;
+            word-break: keep-all;
+
+        }
+        body::-webkit-scrollbar { display: none;  }
+        *,
+        *:active,
+        *:hover,
+        *:focus {
+            outline: none !important;
+        }
+        table {
+            display: table;
+            border-collapse: separate;
+            -webkit-border-horizontal-spacing: 2px;
+            -webkit-border-vertical-spacing: 2px;
+            border-top-color: gray;
+        }
+
+        .form_wrapper {
+            width: 50%;
+            overflow-x: auto;
+            border: 2px solid #42b983;
+            margin-bottom: 0 !important;
+        }
+
+        table[data-v-90661b74] {
+            border-radius: 3px;
+            background-color: #fff;
+        }
+        .grid {
+                        width: 100%;
+                    }
+        *:active, *:hover, *:focus {
+                      outline: none !important;
+                  }
+        table {
+            display: table;
+            border-collapse: separate;
+            -webkit-border-horizontal-spacing: 2px;
+            -webkit-border-vertical-spacing: 2px;
+            border-top-color: gray;
+        }
+        .grid_with_form {
+            width: 50%;
+            -webkit-transition: width 0.5s;
+            transition: width 0.5s;
+            margin-right: 15px;
+        }
+        .contents_grid {
+                        width: 100%;
+                        margin-top: 100px;
+                        max-height: 7px; 
+                        /* overflow-y: auto; */ 
+                        /*-ms-overflow-style: none; */
+                        /* overflow-style: initial; */
+                        /*overflow: auto; */
+                        -webkit-transition: width 0.5s;
+                        transition: width 0.1s;
+                        border: 2px solid #42b983;
+                    }
+
+        btn:not(:disabled):not(.disabled) {
+            cursor: pointer;
+        }
+        .btn-outline-primary:hover {
+                         color: #fff;
+                         background-color: #007bff;
+                         border-color: #007bff;
+                     }
+        .btn:focus, .btn:hover {
+                         text-decoration: none;
+                     }
+        button:hover, a:hover {
+                      cursor: pointer;
+                  }
+        .btn-outline-primary {
+                         color: #007bff;
+                         background-color: transparent;
+                         background-image: none;
+                         border-color: #007bff;
+                     }
+        .btn {
+                         display: inline-block;
+                         font-weight: 400;
+                         text-align: center;
+                         white-space: nowrap;
+                         vertical-align: middle;
+                         -webkit-user-select: none;
+                         -moz-user-select: none;
+                         -ms-user-select: none;
+                         user-select: none;
+                         border: 1px solid transparent;
+                         padding: .375rem .75rem;
+                         font-size: 1rem;
+                         line-height: 1.5;
+                         border-radius: .25rem;
+                         transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+                     }
+
+        button {
+            margin-top: 0em;
+            font-style: normal;
+            font-weight: 400;
+            font-size: 11px;
+            font-family: system-ui;
+            font-variant-caps: normal;
+            color: initial;
+            letter-spacing: normal;
+            word-spacing: normal;
+            line-height: normal;
+            text-transform: none;
+            text-indent: 0px;
+            text-shadow: none;
+            display: inline-block;
+            text-align: start;
+            box-sizing:border-box;
+
+        }
+        .btn-outline-primary {
+            color: #007bff;
+            background-color: transparent;
+            background-image: none;
+            border-color: #007bff;
+        }
+        .input_txt {
+            position: relative;
+            border-radius: 8px;
+            border: solid 1px #ebebeb;
+            background-color: #f5f6f9;
+            margin: 0;
+            line-height: 30px;
+            padding-left: 12px;
+            padding-right: 12px;
+            box-sizing: border-box;
+            min-height: 30px;
+            /* width: 242px; */
+        }
+        .input_txt input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            background-color: transparent;
+            font-size: 12px;
+            color: #181818;
+            width: 168px;
+        }
+        .response_input_txt {
+            position: relative;
+            border-radius: 8px;
+            border: solid 1px #ebebeb;
+            background-color: #f5f6f9;
+            margin: 0;
+            line-height: 30px;
+            padding-left: 12px;
+            padding-right: 12px;
+            box-sizing: border-box;
+            min-height: 30px;
+            /* width: 242px; */
+        }
+        .response_input_txt textarea {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            background-color: transparent;
+            font-size: 12px;
+            color: #181818;
+            width: 100%;
+            height: 200px;
+        }
+        input, textarea, keygen, select, button {
+            margin-top: 0em;
+            font-style: normal;
+            font-weight: 400;
+            font-size: 11px;
+            font-family: system-ui;
+            font-variant-caps: normal;
+            color: initial;
+            letter-spacing: normal;
+            word-spacing: normal;
+            line-height: normal;
+            text-transform: none;
+            text-indent: 0px;
+            text-shadow: none;
+            display: inline-block;
+            text-align: start;
+        }
+        div {
+            display: block;
+        }
+
+        td, th {
+            display: table-cell;
+            vertical-align: inherit;
+        }
+
+        .grid_with_form {
+            width: 50%;
+            -webkit-transition: width 0.5s;
+            transition: width 0.5s;
+            margin-right: 15px;
+        }
+
+        .text_label {
+            padding-left: 20px;
+        }
+    </style>
+
+        <script language="JavaScript">           
+        
+        var host = '' ;
+        let redirectUrl = '/paymint_user';
+        let dateString = '' ;
+       
+        window.onload = function () {
+                     
+            var today = new Date();       
+            var year = today.getFullYear();
+            var month = ('0' + (today.getMonth() + 1)).slice(-2);
+            var day = ('0' + today.getDate()).slice(-2);
+            var hour = ('0' + today.getHours()).slice(-2);
+            var minutes = ('0' + today.getMinutes()).slice(-2);
+            var seconds = ('0' + today.getSeconds()).slice(-2);  
+            dateString = year + '-' + month  + '-' + day+' '+hour+':'+minutes+':'+seconds;
+            console.log(`0-1 접속시간 :  ${dateString}`);
+            document.getElementById('time_nm').innerHTML = "접속시간" ;          
+            document.getElementById('time').innerHTML = dateString ;          
+            
+
+        };
+
+        function payment() {
+            
+            var today = new Date();       
+            var year = today.getFullYear();
+            var month = ('0' + (today.getMonth() + 1)).slice(-2);
+            var day = ('0' + today.getDate()).slice(-2);
+            var hour = ('0' + today.getHours()).slice(-2);
+            var minutes = ('0' + today.getMinutes()).slice(-2);
+            var seconds = ('0' + today.getSeconds()).slice(-2);  
+            dateString = year + '-' + month  + '-' + day+' '+hour+':'+minutes+':'+seconds;           
+            console.log(`0-2 주문시간 :  ${dateString}`);
+            document.getElementById('time_nm').innerHTML = "주문시간" ;      
+            document.getElementById('time').innerHTML = dateString ;        
+
+            var _member_nm = document.getElementById('member_nm').value;
+            var _phone = document.getElementById('phone').value;
+            var _price = document.getElementById('price').value;
+            
+            var _product_nm = document.getElementById('product_nm').value;
+            var _message = document.getElementById('message').value;
+            
+           
+            let data =         
             {
-               "apikey": req.body.apikey   ,     // TEST-API-KEY-URL (x) -> TEST-API-KEY-TALK( 0 )   
-                "member": req.body.member  ,
-                "merchant": req.body.merchant ,
+               "apikey": "TEST-API-KEY-TALK",     // TEST-API-KEY-URL (x) -> TEST-API-KEY-TALK( 0 )   
+                "member": "TEST-MEMBER-FOR-API",
+                "merchant": "TEST-MERCHANT-FOR-API",
                 "bill": {
-                    "bill_id":_bill_id,
-                    "hash":_hash,
-                    "member_nm":_member_nm,
-                    "phone":_phone,
-                    "price":_price,
-                    "product_nm":_product_nm,
-                    "message":_message,                    
+                    "bill_id":"",
+                    "hash":"",
+                    "member_nm": _member_nm,
+                    "phone": _phone,
+                    "price": _price,
+                    "product_nm": _product_nm,
+                    "message": _message,                    
                     "expire_dt":"2024-12-31",
-                    // "callbackURL": ""
-                    "callbackURL":_callbackURL 
+                    "callbackURL": "/paymint_localhost_ngrok"
+                    // "callbackURL":"/chk_paymint" 
                 }
             };
-    
-    
-    console.log('paymint_localhost post -> user_data : ',user_data)
+           
+            // 서버의 청구서 발송 URL           
+            host = "/paymint_localhost_ngrok" ;
 
-    let haha= { 
-        "haha":"paymint_localhost post",
-      "code":"0000",
-      "message": "전송이 완료되었습니다"
-    }
+             // _member_idx = document.getElementById('member_idx').value;
+            // XMLHttpRequest 객체의 생성
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', host);
+            xhr.setRequestHeader('Content-type', 'application/json');    
 
-    res.send(haha)
-    console.log(`\n\n console.log ` , haha)
-    // res.render('./paymint_localhost.ejs',{user_data: user_data})
+            xhr.send(JSON.stringify(data));
+            console.log("1. 전송 ok: ",data)
 
-    
-    
-})
+            // XMLHttpRequest.readyState 프로퍼티가 변경(이벤트 발생)될 때마다 onreadystatechange 이벤트 핸들러가 호출된다.
+            xhr.onreadystatechange = function (e) {
+
+                // console.log("2-0 response   : ", xhr.response);
+                // console.log("2-1 status     : ", xhr.status);                
+                // console.log("2-1 readyState : ", xhr.readyState);                
+                
+                if (xhr.readyState !== XMLHttpRequest.DONE) return;
+                // resJson = JSON.parse(xhr.response);
+                // alert(resJson.info)
+                // 정상
+                if(xhr.status === 200) {
+                    resJson = JSON.parse(xhr.response);
+                    //alert(resJson.info)
+                    console.log("3 응답 ok : ", xhr.response);
+                    // location.href = "http://0.0.0.0:14001/" +resJson.info;
+                    document.getElementById('response').value = JSON.stringify(resJson, null, 4);
+
+                    // document.getElementById('redirectUrl').value = resJson.info.url; 
+                } else {
+                    console.log('Error!');
+                    console.log("4 전송 에러 : ", xhr.response);
+                }
+            };
+        
+
+
+           
+        //    fetch(host, {
+        //        method: "POST",
+        //        headers: { "Content-Type": "application/json" },
+        //       body: JSON.stringify(data)
+        //        })
+        //        //.then((data) => {return data.json()})
+         //       .then((res) => {console.log("2-1 ",res)})
+         //       .catch((error) => console.log("2-2 ",error));
+        //        // window.location.href = '/chk' ; // 서버에서 처리함
+
+            try {
+                //localStorage.setItem('key', '1234data');      
+                // SON.stringify() 메소드를 사용해 datas array를 로컬 스토리지에 저장
+                localStorage.setItem('data', JSON.stringify(data));
+
+                } catch (error) {
+                //console.log(error) ;
+                console.error(error.message); //raises the error
+                }
+
+       
+        };
+ 
+ 
+     
+    </script>
+</head>
+
+    <!-- END HEAD -->
+
+    <body class="bg_gray">    
+     
+
+
+  <%- include('nav.ejs') %>
+
+<!--         <p>/paymint_user </p>
+        <p>/paymint_localhost</p>
+        <p>/paymint_1</p> -->
+        
+        <div class="contents_grid grid_with_form" style="width:100%; transform: translate(0%, 50%)">
+            <h4>
+                테스트 결제하기 ( User )
+            </h4>
+
+            <table class="grid" >
+                <tr>
+                    <td class="text_label"> * member_nm</td>
+                    <td><div class="input_txt"><input placeholder="member_nm" id="member_nm" name="member_nm" tabindex="1" autofocus value="홍길똥"></div></td>
+                </tr>
+                <tr>
+                    <td class="text_label"> * phone </td>
+                    <td><div class="input_txt"><input placeholder="phone" id="phone" name="phone" tabindex="2" autofocus value="01090437295"></div></td>
+                </tr>
+              	<tr>
+                    <td class="text_label"> * price </td>
+                    <td><div class="input_txt"><input placeholder="price" id="price" name="price" tabindex="3" autofocus value="20001"></div></td>
+                </tr>
+                <tr>
+                    <td class="text_label"> * product_nm </td>
+                    <td><div class="input_txt"><input placeholder="product_nm" id="product_nm" name="product_nm" tabindex="4" autofocus value="상품명 - 테스트"></div></td>
+                </tr>
+                <tr>
+                    <td class="text_label"> * message </td>
+                    <td><div class="input_txt"><input placeholder="message" id="message" name="message" tabindex="5" autofocus value="메세지 - 코드수학학원 테스트"></div></td>
+                </tr>
+
+                <tr>
+                	<td></td>
+                    <td colspan="2" style="text-align: left;">
+                        <button style="width: 30%; margin: 20px 0px 30px 0px" type="button" class="btn btn-outline-primary" onclick="javascript:payment();">결제하기</button>
+                    </td>
+                </tr>
+
+
+
+                <tr>
+                    <td class="text_label"> * 응답 값 
+                        <p id = 'time_nm' value = 'time_nm'></p>
+                        <p id = 'time' value = 'time'></p>
+                                                
+                    </td>
+                    <td><div class="response_input_txt">
+                    	<textarea id="response" name="response" tabindex="1" autofocus value="" readonly></textarea>
+                    </div>
+                    </td>
+                </tr>
+                <tr>
+                	<td></td>
+                    
+                </tr>
+                <tr>
+            </table>
+        </div>
+        <script>
+ 
+          </script>
+    </body>
+</html>
