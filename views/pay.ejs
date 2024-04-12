@@ -1,0 +1,108 @@
+
+<%- include('head-body-nav.ejs', {title : "basic"}) %>
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
+    <!-- iamport.payment.js -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <!-- <script src="env.js"></script> -->
+   
+
+  <div class="white-bg">
+    
+    <h2>결제하기 (포트원 테스트입니다)</h2>
+    <br>
+    <form name="pgForm">
+      <!-- <input type="hidden" name="Amt" value="1000">
+      <input type="hidden" name="BuyerName" value="홍길동">
+      <input type="hidden" name="OrderName" value="결제테스트"> -->
+      
+      <br> 
+      <label for="">구 매 자  :   </label>
+      <input name="BuyerName" value="홍길동">
+      <br> <br>
+      <label for="">결 제 내 용 :</label>
+      <input name="OrderName" value="결제테스트">
+      <br><br>
+      <label for="" >결 제 금 액 : </label>
+      <input name="Amt" value="1000">
+      <br> 
+    </form> 
+    <br>
+    <button class="btn btn-primary" onclick="request_pay()">결제하기</button>
+    <br><br>
+    
+
+    
+    <script>
+       
+        function request_pay () { 
+    
+            // https://github.com/iamport/iamport-react-example/blob/master/manuals/PAYMENT.md
+            
+            const PORTONE_SHOP_ID="imp17162765"
+            const IMP = window.IMP;
+            IMP.init(PORTONE_SHOP_ID);        
+    
+            const name = "코드수학학원 중등부";
+            const buyer_name = '이원달';
+            const amount = 102;
+            const merchant_uid = "merchant_" + new Date().getTime() ;
+            
+            console.log("pay 1 : 결제버튼 클릭 :",name, buyer_name, amount, merchant_uid);
+            console.log("pay 2 : env.js의 : ", PORTONE_SHOP_ID, PORTONE_API_KEY, PORTONE_API_SECRET);
+            IMP.request_pay({
+                merchant_uid : merchant_uid ,
+                buyer_name : buyer_name ,
+                name : name ,
+                amount: amount,
+                // pg : 'payco',
+                pay_method : 'card', //생략 가능
+                buyer_email : 'wavedal@naver.com',            
+                buyer_tel : '010-9043-7295',
+                buyer_addr : '경기도 화성시 동탄대로시범길 148-20 마추프라자 406호',
+                buyer_postcode : '123-456',
+                // m_redirect_url: "PAYMENT_CHK_URL/chk",
+                // notice_url:     "PAYMENT_CHK_URLp/chk",
+                // m_redirect_url: "https://24a0-175-214-28-198.ngrok-free.app/chk",
+                // notice_url:     "https://24a0-175-214-28-198.ngrok-free.appp/chk",
+    
+    
+                // notice_url : "http://127.0.0.1:5500/jspay.html",
+                // m_redirect_url : "http://127.0.0.1:5500/jspay.html", // 예: https://www.my-service.com/payments/complete
+                // m_redirect_url : '{결제 완료 후 리디렉션 될 URL}' // 예: https://www.my-service.com/payments/complete
+                      // https://github.com/iamport/iamport-manual/blob/master/%EC%9D%B8%EC%A6%9D%EA%B2%B0%EC%A0%9C/README.md#webview
+    
+
+              }, function (respons) { // callback
+              // 콜백 함수
+              console.log("pay 3 : Callback", respons);
+
+
+              fetch('/chk', {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(respons)
+                });
+              window.location.href = '/chk' ; // 서버에서 처리함
+
+                                
+                              
+              }              
+            );
+            };            
+            </script>
+
+        <div class="list-box">
+        <h4>글목록</h4>
+        <p>글목록의 내용</p>
+        </div>
+    
+  </div> 
+
+  
+
+<%- include('tail.ejs') %>
+  
